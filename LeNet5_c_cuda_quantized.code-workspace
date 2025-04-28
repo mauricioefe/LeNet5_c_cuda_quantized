@@ -1,0 +1,14 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"stdint.h": "c",
+			"lenet_quantized.h": "c",
+			"stdlib.h": "c"
+		}
+	}
+}
