@@ -1,13 +1,5 @@
-## TODO
-- Update the readme so that it reflects the purpose of this lab, i.e. what are the new files and what does each one do? What was the purpose of this lab?
-- mention that I updated tasks.json to use the new *_quantized code
-- maybe make it so that tasks.json includes everything necessary so both quantized and regular code will build/run
-- Update the sections relating to building/running on the jetson
-- In the results show the difference between how long it took to train quantized versus regular
-- In the results show the difference in performance between quantized and regular
-
 # LeNet5_c_cuda_quantized
-Codebase for working with [LeNet5](https://github.com/fan-wenjie/LeNet-5) by [fan-wenjie](https://github.com/fan-wenjie). There's a file for training the model on a PC (C), testing the model on a PC (C), testing the model on a Jetson (C), and testing the model on a Jetson using cuda. The objective of this experiment is to show benefits of parallelism.
+Codebase for working with [LeNet5](https://github.com/fan-wenjie/LeNet-5) by [fan-wenjie](https://github.com/fan-wenjie). There's a file for training the model on a PC (C), testing the model on a PC (C), testing the model on a Jetson (C), and testing the model on a Jetson using cuda. The objective of this experiment is to show benefits of quantization.
 
 Many of these steps/code have files located where I like to place them in my PC, if you place files in different places the steps/code may not work, so don't forget to update paths as needed.
 
@@ -41,9 +33,9 @@ Many of these steps/code have files located where I like to place them in my PC,
 - You can install these extensions within VS Code by searching for 'C++' in the Extensions view `(Ctrl+Shift+X)`.
 
 ## Open this repo in VS Code as a workspace
-- This repo should land in a folder called `LeNet5_c_cuda`
+- This repo should land in a folder called `LeNet5_c_cuda_quantized`
 - Open VS Code then click File -> Open workspace from file...
-- Select the workspace file `LeNet5_c_cuda.code-workspace`
+- Select the workspace file `LeNet5_c_cuda_quantized.code-workspace`
 - You may have to add folder to workspace which should be the parent directory of the code-workspace file, the workspace structure should look like this:
 
 LeNet5 \
@@ -51,7 +43,7 @@ LeNet5 \
 ├── Library \
 ├── Output \
 ├── Source \
-├── LeNet5_c_cuda.code-workspace \
+├── LeNet5_c_cuda_quantized.code-workspace \
 ├── README.md
 
 
@@ -99,7 +91,7 @@ LeNet5 \
 
 ## Setup VS Code so it can compile LeNet5 source code
 - You'll need a tasks.json file located in .vscode folder, this should already exist in the repo but if you try to compile and it can't find the SDK, it means there is no tasks.json
-- Your tasks.json should have arguments pointing to the header and library files of the SDK
+- Your tasks.json should have arguments pointing to the header and library files of the source code (.c and .h files).
 - Your tasks.json should also have arguments pointing to your source code
 - more details about using VS Code this way can be found [here](https://code.visualstudio.com/docs/languages/cpp)
 - If you're using this repo as the workspace (recommended) then this has already been done!
@@ -108,74 +100,86 @@ LeNet5 \
 CAUTION In VS Code, sometimes you'll open a C file and the run button is gone. No clue why this happens, but you can fix it by clicking the "split editor right" button (it's next to where the run button should be). No clue why that's a thing.
 
 ### Training the Model
-- Open pc_training.c in VS Code
+- Open pc_training_quantized.c in VS Code
 - Hit play, let it do its thing, maybe update your paths
     - This will output a `model.dat` which contains your trained weights and biases!
 
 ### Test the Model
-- Open pc_jetson_test.c
+- Open pc_jetson_test_quantized.c
 - Hit play, ...
     - This loads the `model.dat` and the dataset and tests the dataset with the trained model.
 
 ## Running Code on the Jetson
 
 ### Single-Thread Test
-This is the same code that runs on the PC, pc_jetson_test.c
+This is the same code that runs on the PC, pc_jetson_test_quantized.c
 
 Create a directory structured like this: \
 This directory does not have to be inside the workspace (recommended).
 
 single-thread  \
-├── pc_jetson_test.c  \
-├── lenet.c \
-├── lenet.h \
+├── pc_jetson_test_quantized.c  \
+├── lenet_quantized.c \
+├── lenet_quantized.h \
 ├── model.dat \
 ├── t10k-images-idx3-ubyte \
 ├── t10k-labels-idx1-ubyte
 
 - Just **copy** the files that you need from this repo to your single-thread folder.
 - You can find...
-    - `pc_jetson_test.c` in LeNet5_c_cuda/Source
-    - `lenet.c`, `lenet.h`, `t10k-images-idx3-ubyte` and `t10k-labels-idx1-ubyte` in LeNet5_c_cuda/Library/LeNet5/LeNet-5
-    - `model.dat` in LenNet5_C/Output
+    - `pc_jetson_test_quantized.c` in LeNet5_c_cuda_quantized/Source
+    - `t10k-images-idx3-ubyte` and `t10k-labels-idx1-ubyte` in LeNet5_c_cuda_quantized/Library/LeNet5/LeNet-5
+    - `lenet_quantized.c`, `lenet_quantized.h` in LeNet5_c_cuda_quantized/Source/include
+    - `model.dat` in LeNet5_c_cuda_quantized/Output
 - Open a terminal.
 - Use `ls`/`cd` to navigate to your `single-thread` directory.
     - i.e. `> cd path/to/where/you/placed/single-thread`
-- Run `gcc -o lenet5singlethread pc_jetson_test.c lenet.c -lm` to generate the .exe file.
-    - You will see `lenet5singlethread` appear in the folder.
-- Run `./lenet5singlethread` and wait...
+- Run `gcc -o lenet5Qsinglethread pc_jetson_test_quantized.c lenet_quantized.c -lm` to generate the .exe file.
+    - You will see `lenet5Qsinglethread` appear in the folder.
+- Run `./lenet5Qsinglethread` and wait...
     - This loads the `model.dat` and the dataset and tests the dataset with the trained model.
     - After a while, you should see the accuracy and elapsed time appear in the terminal.
-    - Mine took 146 seconds.
+    - Mine took 150 seconds.
 
 ### Multi-Thread Test (cuda)
 Create a directory structured like this: \
 This directory does not have to be inside the workspace (recommended).
 
 multi-thread  \
-├── jetson_test.cu  \
+├── jetson_test_quantized.cu  \
 ├── model.dat \
 ├── t10k-images-idx3-ubyte \
 ├── t10k-labels-idx1-ubyte
 
 - Just **copy** the files that you need from this repo to your single-thread folder.
 - You can find...
-    - `jetson_test.cu` in LeNet5_c_cuda/Source
-    - `model.dat` in LenNet5_C/Output
-    - `t10k-images-idx3-ubyte` and `t10k-labels-idx1-ubyte` in LeNet5_c_cuda/Library/LeNet5/LeNet-5
+    - `jetson_test_quantized.cu` in LeNet5_c_cuda_quantized/Source
+    - `model.dat` in LeNet5_c_cuda_quantized/Output
+    - `t10k-images-idx3-ubyte` and `t10k-labels-idx1-ubyte` in LeNet5_c_cuda_quantized/Library/LeNet5/LeNet-5
 - Open a terminal.
 - Use `ls`/`cd` to navigate to your `multi-thread` directory.
     - i.e. `> cd path/to/where/you/placed/multi-thread`
-- Run `nvcc -o lenet5multithread jetson_test.cu` to generate the .exe file.
-    - You will see `lenet5multithread` appear in the folder.
-- Run `./lenet5multithread` and wait...
+- Run `nvcc -o lenet5Qmultithread jetson_test_quantized.cu` to generate the .exe file.
+    - You will see `lenet5Qmultithread` appear in the folder.
+- Run `./lenet5Qmultithread` and wait...
     - This loads the `model.dat` and the dataset and tests the dataset with the trained model.
     - After a while, you should see the accuracy and elapsed time appear in the terminal.
-    - Mine took 0.21 seconds.
+    - Mine took 0.15 seconds.
     - Yes, zero point!
 
 ### Results
 
+The main benefit of quantization is the model.dat file was reduced from around 400 KB to 51 KB while retaining comparable performance to the original model.
+
+#### Quantized Model
+| Model | Accuracy | Time |
+|:-------------:|:-------------:|:-------------:|
+| PC Training | 9547/10000 | 10m 20s |
+| PC Test | ... | 17s |
+| Jetson Single-thread | ... | 2m 30s |
+| Jetson Multi-thread | ... | 0.15s |
+
+#### Non-quantized Model
 | Model | Accuracy | Time |
 |:-------------:|:-------------:|:-------------:|
 | PC Training | 9718/10000 | 5m 47s |
@@ -191,9 +195,9 @@ For a markdown formatting cheatsheet visit this page for [standard syntax](https
 
 ### Tool Versions (Windows)
 
-| Tool | Accuracy | Date |
-|:-------------:|:-------------:|:-------------:|
+| Tool | Version |
+|:-------------:|:-------------:|
 | MSYS2 | msys2-x86_64-20250221 |
-| gcc | 14.2.0 | |
-| gdb | 16.2 | |
-| g++ | 14.2.0 | |
+| gcc | 14.2.0 |
+| gdb | 16.2 |
+| g++ | 14.2.0 |

@@ -34,15 +34,13 @@ double dequantize(int8_t value)
 }
 
 #define CONVOLUTE_VALID(input, output, weight)                             \
-{                                                                          \
-    /* loops over output[y][x] += input[y + wy][x + wx] * qat_weight(w) */ \
+{          																   \
     FOREACH(o0, GETLENGTH(output))                                         \
     FOREACH(o1, GETLENGTH(*(output)))                                      \
     FOREACH(w0, GETLENGTH(weight))                                         \
-    FOREACH(w1, GETLENGTH(*(weight)))                                       \
-        (output)[o0][o1] +=                                                 \
-            (input)[o0 + w0][o1 + w1] *                                     \
-            qat_weight((weight)[w0][w1]);                                  \
+    FOREACH(w1, GETLENGTH(*(weight)))                                      \
+        (output)[o0][o1] +=                                                \
+            (input)[o0 + w0][o1 + w1] * qat_weight((weight)[w0][w1]);      \
 }
 
 // #define CONVOLUTION_FORWARD(input,output,weight,bias,action)					\
@@ -57,22 +55,18 @@ double dequantize(int8_t value)
 
 #define CONVOLUTION_FORWARD(input, output, weight, bias, action)           \
 {                                                                          \
-    /* for each input‐channel / output‐channel pair */                     \
     for (int in_ch = 0; in_ch < GETLENGTH(weight); ++in_ch)                \
         for (int out_ch = 0; out_ch < GETLENGTH(*(weight)); ++out_ch)      \
-            /* apply QAT‐aware valid convolution */                        \
             CONVOLUTE_VALID(                                               \
                 (input)[in_ch],                                            \
                 (output)[out_ch],                                          \
-                (weight)[in_ch][out_ch] );                                  \
+                (weight)[in_ch][out_ch] );                                 \
                                                                            \
-    /* add dequantized bias and activation */                              \
     FOREACH(j, GETLENGTH(bias))                                            \
         FOREACH(i, GETCOUNT(output[j]))                                    \
             ((double*)(output)[j])[i] =                                    \
                 action(                                                    \
-                  ((double*)(output)[j])[i] +                             \
-                  qat_bias((bias)[j]) );                                   \
+                  ((double*)(output)[j])[i] + qat_bias((bias)[j]) );       \
 }
 
 #define CONVOLUTION_BACKWARD(input,inerror,outerror,weight,wd,bd,actiongrad)\
@@ -142,14 +136,10 @@ double dequantize(int8_t value)
 
 #define DOT_PRODUCT_FORWARD(input, output, weight, bias, action)               \
 {                                                                              \
-    /* 1) accumulate each output[j] += input[x] * dequantized(quantized w) */  \
     for (int x = 0; x < GETLENGTH(weight); ++x)                                \
         for (int j = 0; j < GETLENGTH(*(weight)); ++j)                         \
-            ((double*)(output))[j] +=                                         \
-                ((double*)(input))[x]                                          \
-              * qat_weight( ((weight)[x][j]) );                                \
-                                                                               \
-    /* 2) add dequantized bias and apply activation */                         \
+            ((double*)(output))[j] +=                                          \
+                ((double*)(input))[x] * qat_weight( ((weight)[x][j]) );        \
     FOREACH(j, GETLENGTH(bias))                                                \
         ((double*)(output))[j] =                                               \
             action( ((double*)(output))[j] + qat_bias( (bias)[j] ) );          \

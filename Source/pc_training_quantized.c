@@ -8,8 +8,8 @@
 #define FILE_TRAIN_LABEL		"X:\\Development\\LeNet5_c_cuda_quantized\\Library\\LeNet5\\LeNet-5\\train-labels-idx1-ubyte"
 #define FILE_TEST_IMAGE		"X:\\Development\\LeNet5_c_cuda_quantized\\Library\\LeNet5\\LeNet-5\\t10k-images-idx3-ubyte"
 #define FILE_TEST_LABEL		"X:\\Development\\LeNet5_c_cuda_quantized\\Library\\LeNet5\\LeNet-5\\t10k-labels-idx1-ubyte"
-#define LENET_FILE 		    "X:\\Development\\LeNet5_c_cuda_quantized\\Output\\model.dat"
-#define LENET_Q_FILE 		"X:\\Development\\LeNet5_c_cuda_quantized\\Output\\model_quantized.dat"
+#define LENET_FILE 		    "X:\\Development\\LeNet5_c_cuda_quantized\\Output\\model_1.dat"
+#define LENET_Q_FILE 		"X:\\Development\\LeNet5_c_cuda_quantized\\Output\\model_quantized_1.dat"
 #define COUNT_TRAIN		60000
 #define COUNT_TEST		10000
 
@@ -119,10 +119,15 @@ void foo()
     }
 
     // ——— evaluate full-precision ———
+    
+    t0 = clock();
     int correct_fp = testing(lenet, test_data, test_label, COUNT_TEST);
+    double infer_secs = (clock() - t0) / (double)CLOCKS_PER_SEC;
     printf("FP accuracy:        %d / %d (%.2f%%)\n",
            correct_fp, COUNT_TEST,
            correct_fp*100.0/COUNT_TEST);
+    printf("FP inference: %.2f s total, %.2f ms/image\n",
+        infer_secs, infer_secs*1000.0/COUNT_TEST);
 
     // ——— evaluate pure-int8 inference ———
     LeNet5Quant qnet;
